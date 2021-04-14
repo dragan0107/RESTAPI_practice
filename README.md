@@ -1,5 +1,5 @@
 # RESTAPI_practice
-RESTAPI practice made with node and express, refactored version.
+RESTAPI practice made with node, express and mongoose, refactored version.
 
 very simple schema has been used which looks like this:
 {
