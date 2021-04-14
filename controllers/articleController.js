@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/wikiDB', {
+mongoose.connect('mongodb+srv://restapi-test:AgoTnOHPgCiDfXV8@cluster0.q2epf.mongodb.net/articlesDB?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
