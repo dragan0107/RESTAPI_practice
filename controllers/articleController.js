@@ -1,21 +1,10 @@
-const mongoose = require('mongoose');
-
-mongoose.connect('mongodb+srv://restapi-test:AgoTnOHPgCiDfXV8@cluster0.q2epf.mongodb.net/articlesDB?retryWrites=true&w=majority', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
-
-const articleSchema = ({
-    title: String,
-    content: String
-});
-
-const Article = mongoose.model('Article', articleSchema);
+const User = require('../model/userModel');
 
 
-exports.getArticles = async(req, res) => {
+exports.getUsers = async(req, res) => {
+
     try {
-        const articles = await Article.find();
+        const articles = await User.find();
         res.status(200).json({
             status: "success",
             numOfArticles: articles.length,
@@ -32,24 +21,7 @@ exports.getArticles = async(req, res) => {
 
 }
 
-exports.addArticle = async(req, res) => {
-    try {
-        const newArtcl = await Article.create(req.body);
 
-        res.status(200).json({
-            status: "Successfully saved new item in the database!",
-            results: {
-                data: newArtcl
-            }
-        });
-    } catch (err) {
-        res.status(400).json({
-            status: "fail",
-            message: err
-        });
-    }
-
-}
 
 exports.deleteAllArticles = async(req, res) => {
 
@@ -94,6 +66,7 @@ exports.getArticle = async(req, res) => {
     }
 }
 
+
 exports.putArticle = async(req, res) => {
 
     try {
@@ -113,9 +86,35 @@ exports.putArticle = async(req, res) => {
 
 }
 
+
+
+exports.addNewArticle = async(req, res) => {
+    try {
+        const newArticle = {
+            title: req.body.title,
+            content: req.body.content
+        }
+
+        const article = await User.findByIdAndUpdate({ _id: req.body.id }, { $push: { articles: newArticle } })
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                article
+            }
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            err
+        })
+    }
+
+}
+
 exports.patchArticle = async(req, res) => {
     try {
-        const patchedArtc = await Article.updateOne({ title: req.params.articleTitle }, { $set: req.body });
+        const patchedArtc = await User.findByIdAndUpdate({ id: req.body.id }, { $set: req.body });
 
         res.status(200).json({
             results: {

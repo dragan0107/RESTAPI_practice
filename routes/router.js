@@ -1,12 +1,15 @@
 const express = require("express");
-const { getArticles, addArticle, deleteAllArticles, getArticle, putArticle, patchArticle, deleteArticle } = require("../controllers/articleController")
+const { getUsers, deleteAllArticles, getArticle, putArticle, patchArticle, deleteArticle, addNewArticle } = require("../controllers/articleController");
+const { registerUser, login, protect } = require('../controllers/authController');
 const router = express.Router();
+
+router.post('/register', registerUser);
+router.post('/login', login);
 
 
 router.route("/")
-    .get(getArticles)
-    .post(addArticle)
-    .delete(deleteAllArticles);
+    .get(protect, getUsers)
+    .patch(addNewArticle)
 
 router.route("/:articleTitle")
     .get(getArticle)
