@@ -1,28 +1,7 @@
 # RESTAPI_practice
 RESTAPI practice made with node, express and mongoose, refactored version.
 
-very simple schema has been used which looks like this:
-{
-    title: "....",
-    content: "...."
-}
+Currently, I have started rebuilding this project yet again, hence I'm updating this Readme.
 
-Functionality: 
-
-"/articles" route:
-
-GET request: returns all the articles from the database;
-POST request: adds a new article to the database,
-DELETE request: deletes ALL the articles from the database!!!
-
-"/articles/articleTitle" route: 
-
-GET: gets a specific article by the given title,
-PUT: put request overwrites the article with the properties that are sent by the given title,
-PATCH: updates the article by the given title,
-DELETE: deletes an article by the given title
-
-
-How to start and test: 
-1: fork the copy and run "npm install" on your machine;
-2: run "npm start" in the terminal
+The goal for this RESTful API is to implement FULL functionality with registering, logging in, protected routes with specific roles, error handling and much more.
+I want to practice and use all the knowledge I've acquired until now in NodeJS, Express, Mongoose.
