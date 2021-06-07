@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema({
             message: 'Passwords DO NOT match, please try again.'
         }
     },
+    passwordChangedAt: {
+        type: Date
+    },
     articles: [{
         title: String,
         content: String
@@ -42,6 +45,16 @@ userSchema.pre('save', async function(next) {
     this.passwordConfirm = undefined;
     next();
 });
+
+userSchema.pre('save', function(next) {
+    if (!this.isModified('password') || this.isNew) {
+        return next();
+    }
+
+    this.passwordChangedAt = Date.now() - 1000;
+    next();
+});
+
 
 userSchema.methods.passwordChecker = async function(candidatePass, userPassword) {
     return await bcrypt.compare(candidatePass, userPassword);

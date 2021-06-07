@@ -1,14 +1,14 @@
 const jwt = require('jsonwebtoken');
 const User = require('../model/userModel');
-
-
+const { promisify } = require('util');
+//Token generator function that takes the user ID as a parameter.
 const generateToken = id => {
-    return jwt.sign({ id: id }, 'testing_secret_homie', {
-        expiresIn: "60d"
-    })
+    return jwt.sign({ id: id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN
+    });
 }
 
-
+//Function that creates the token and sends it along with the user as a response.
 const createSendToken = (user, statusCode, res) => {
 
     const token = generateToken(user._id);
@@ -23,6 +23,8 @@ const createSendToken = (user, statusCode, res) => {
     });
 }
 
+
+//User register handler.
 exports.registerUser = async(req, res) => {
 
     const { email, password, passwordConfirm } = req.body;
@@ -46,7 +48,7 @@ exports.registerUser = async(req, res) => {
 
 }
 
-
+//User Login handler
 exports.login = async(req, res) => {
 
     const { email, password } = req.body;
@@ -65,9 +67,39 @@ exports.login = async(req, res) => {
 
 }
 
-
+//Route protect middleware that verifies the token before allowing the user to access a certain route.
 exports.protect = async(req, res, next) => {
-    console.log(req.headers.authorization);
+
+    let token;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+
+    const userFound = await User.findById(decoded.id);
+
+    req.user = userFound;
 
     next();
+}
+
+
+exports.updatePassword = async(req, res) => {
+
+    const { password, newPass, newPassConfirm } = req.body;
+
+    let user = await User.findById(req.user.id).select('+password');
+
+    if (user.passwordChecker(password, user.password)) {
+        user.password = newPass;
+        user.passwordConfirm = newPassConfirm;
+        await user.save();
+    }
+
+
+    createSendToken(user, 200, res);
+
 }

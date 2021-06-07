@@ -1,10 +1,11 @@
 const express = require("express");
 const { getUsers, deleteAllArticles, getArticle, putArticle, patchArticle, deleteArticle, addNewArticle } = require("../controllers/articleController");
-const { registerUser, login, protect } = require('../controllers/authController');
+const { registerUser, login, protect, updatePassword } = require('../controllers/authController');
 const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', login);
+router.post('/updatePassword', protect, updatePassword);
 
 
 router.route("/")
