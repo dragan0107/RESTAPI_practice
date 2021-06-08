@@ -1,10 +1,10 @@
 const User = require('../model/userModel');
 
 
-exports.getUsers = async(req, res) => {
+exports.getArticlesFromUser = async(req, res) => {
 
     try {
-        const articles = await User.find();
+        const articles = req.user.articles;
         res.status(200).json({
             status: "success",
             numOfArticles: articles.length,

@@ -1,12 +1,14 @@
 const jwt = require('jsonwebtoken');
 const User = require('../model/userModel');
 const { promisify } = require('util');
+const AppError = require('../utilities/AppError');
 //Token generator function that takes the user ID as a parameter.
 const generateToken = id => {
     return jwt.sign({ id: id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN
     });
 }
+
 
 //Function that creates the token and sends it along with the user as a response.
 const createSendToken = (user, statusCode, res) => {
@@ -16,9 +18,6 @@ const createSendToken = (user, statusCode, res) => {
 
     res.status(statusCode).json({
         status: "success",
-        results: {
-            data: user
-        },
         token
     });
 }
@@ -87,17 +86,19 @@ exports.protect = async(req, res, next) => {
 }
 
 
-exports.updatePassword = async(req, res) => {
+exports.updatePassword = async(req, res, next) => {
 
     const { password, newPass, newPassConfirm } = req.body;
 
     let user = await User.findById(req.user.id).select('+password');
 
-    if (user.passwordChecker(password, user.password)) {
-        user.password = newPass;
-        user.passwordConfirm = newPassConfirm;
-        await user.save();
+    if (!await user.passwordChecker(password, user.password)) {
+        return next(new AppError('Wrong password, try again', 401));
     }
+
+    user.password = newPass;
+    user.passwordConfirm = newPassConfirm;
+    await user.save();
 
 
     createSendToken(user, 200, res);

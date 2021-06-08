@@ -1,5 +1,5 @@
 const express = require("express");
-const { getUsers, deleteAllArticles, getArticle, putArticle, patchArticle, deleteArticle, addNewArticle } = require("../controllers/articleController");
+const { getArticlesFromUser, deleteAllArticles, getArticle, putArticle, patchArticle, deleteArticle, addNewArticle } = require("../controllers/articleController");
 const { registerUser, login, protect, updatePassword } = require('../controllers/authController');
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.post('/updatePassword', protect, updatePassword);
 
 
 router.route("/")
-    .get(protect, getUsers)
+    .get(protect, getArticlesFromUser)
     .patch(addNewArticle)
 
 router.route("/:articleTitle")
