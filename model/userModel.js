@@ -56,6 +56,17 @@ userSchema.pre('save', function(next) {
 });
 
 
+userSchema.methods.passwordChanged = function(jwttimestamp) {
+
+    if (this.passwordChangedAt) {
+        const passwordChanged = parseInt(this.passwordChangedAt / 1000, 10);
+
+        return jwttimestamp < passwordChanged; //if jwt time stamp is lower than password changed stamp, it means TOKEN is outdated
+    }
+    //if it returns false that means the token has been issued after password changing
+    return false;
+}
+
 userSchema.methods.passwordChecker = async function(candidatePass, userPassword) {
     return await bcrypt.compare(candidatePass, userPassword);
 }

@@ -48,9 +48,13 @@ exports.registerUser = async(req, res) => {
 }
 
 //User Login handler
-exports.login = async(req, res) => {
+exports.login = async(req, res, next) => {
 
     const { email, password } = req.body;
+
+    if (!email || !password) {
+        return next(new AppError('Please enter both email and password', 400));
+    }
 
     const user = await User.findOne({ email }).select('+password');
 
@@ -71,14 +75,32 @@ exports.protect = async(req, res, next) => {
 
     let token;
 
+    //Checks if there is an auth header and if it starts with bearer, and tries to obtain the token
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
 
+    //If no token, asks user to login again and provide a new token
+    if (!token) {
+        return next(new AppError('You are not logged in, please try again', 401))
+    }
+
+    //token verification 
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
 
     const userFound = await User.findById(decoded.id);
+
+    //checks if user with the provided token still exists
+
+    if (!userFound) {
+        return next(new AppError('The user with provided token no longer exists', 401));
+    }
+
+
+    if (userFound.passwordChanged(decoded.iat)) {
+        return next(new AppError('Password has been changed recently, please login with new password', 401));
+    }
 
     req.user = userFound;
 
