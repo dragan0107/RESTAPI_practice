@@ -111,17 +111,14 @@ exports.protect = async(req, res, next) => {
 }
 
 
-// exports.forgotPassword.
-
-
-exports.forgotPassword = async(req, res) => {
+exports.forgotPassword = async(req, res, next) => {
 
     //user enters an email and we query if there's such a user.
 
     const { email } = req.body;
 
     if (!email) {
-        return next(new AppError('Please, enter the email with the forgotten password', 400));
+        return next(new AppError(`Please, enter the email you're registered with`, 400));
     }
 
     const user = await User.findOne({ email: email });
@@ -138,9 +135,9 @@ exports.forgotPassword = async(req, res) => {
     await user.save({ validateBeforeSave: false })
 
     let message = {
-        from: '"Fred Foo 👻" <foo@example.com>', // sender address
-        to: "bar@example.com, baz@example.com", // list of receivers
-        subject: "Hello ✔", // Subject line
+        from: '"restful_api_service" <restful_api_service@drip.com>', // sender address
+        to: `${user.email}`, // list of receivers
+        subject: "Password reset token!", // Subject line
         text: `Forgot your password huh? Theres your reset token: ${resetToken}`, // plain text body
     };
 
@@ -148,28 +145,75 @@ exports.forgotPassword = async(req, res) => {
     let mail = await transporter.sendMail(message);
 
     res.status(200).json({
-        status: "sucess",
+        status: "success",
         mail
     });
 
 }
 
 
+exports.resetPassword = async(req, res, next) => {
+
+    //parse the password and password confirm
+
+    const { password, passwordConfirm } = req.body;
+    //1) pass the token in req params and hash it for comparison in DB
+
+    const token = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+
+    //2)query in db for the user and at the same time check if token has expired
+
+    const user = await User.findOne({ passwordResetToken: token, passwordResetExpires: { $gt: Date.now() } });
+
+    if (!user) {
+        return next(new AppError(`Bad token or it has already expired, please try again..`, 401));
+    }
+
+    //3) if it finds the user, then allow it to update the password and save
+
+
+    user.password = password;
+    user.passwordConfirm = passwordConfirm;
+
+    //removing the token and its expiration date from the document and finally saving it
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+
+    res.status(200).json({
+        status: 'success',
+        user
+    });
+
+
+}
+
+
 exports.updatePassword = async(req, res, next) => {
 
+    //destructuring the body
     const { password, newPass, newPassConfirm } = req.body;
 
+
+    //querying for user and reincluding password for comparison
     let user = await User.findById(req.user.id).select('+password');
 
+
+    //if password is wrong, return the error
     if (!await user.passwordChecker(password, user.password)) {
         return next(new AppError('Wrong password, try again', 401));
     }
 
+    //if its correct, allow for pass update and save
     user.password = newPass;
     user.passwordConfirm = newPassConfirm;
     await user.save();
 
 
+
+    //after that, send new token
     createSendToken(user, 200, res);
 
 }
