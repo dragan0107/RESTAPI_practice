@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../model/userModel');
 const { promisify } = require('util');
 const AppError = require('../utilities/AppError');
+const transporter = require('../utilities/sendEmail');
+
 //Token generator function that takes the user ID as a parameter.
 const generateToken = id => {
     return jwt.sign({ id: id }, process.env.JWT_SECRET, {
@@ -97,7 +99,7 @@ exports.protect = async(req, res, next) => {
         return next(new AppError('The user with provided token no longer exists', 401));
     }
 
-
+    //Checking whether password had been changed after issued token
     if (userFound.passwordChanged(decoded.iat)) {
         return next(new AppError('Password has been changed recently, please login with new password', 401));
     }
@@ -105,6 +107,31 @@ exports.protect = async(req, res, next) => {
     req.user = userFound;
 
     next();
+}
+
+
+// exports.forgotPassword.
+
+
+exports.testEmail = async(req, res) => {
+
+
+    let message = {
+        from: '"Fred Foo 👻" <foo@example.com>', // sender address
+        to: "bar@example.com, baz@example.com", // list of receivers
+        subject: "Hello ✔", // Subject line
+        text: "Hello world?", // plain text body
+        html: "<b>Hello world?</b>", // html body
+    };
+
+
+    let mail = await transporter.sendMail(message);
+
+    res.status(200).json({
+        status: "sucess",
+        mail
+    });
+
 }
 
 
