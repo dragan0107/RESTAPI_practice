@@ -3,6 +3,7 @@ const User = require('../model/userModel');
 const { promisify } = require('util');
 const AppError = require('../utilities/AppError');
 const transporter = require('../utilities/sendEmail');
+const crypto = require('crypto');
 
 //Token generator function that takes the user ID as a parameter.
 const generateToken = id => {
@@ -113,15 +114,34 @@ exports.protect = async(req, res, next) => {
 // exports.forgotPassword.
 
 
-exports.testEmail = async(req, res) => {
+exports.forgotPassword = async(req, res) => {
 
+    //user enters an email and we query if there's such a user.
+
+    const { email } = req.body;
+
+    if (!email) {
+        return next(new AppError('Please, enter the email with the forgotten password', 400));
+    }
+
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+        return next(new AppError('Wrong email or user doesnt exist in the database', 401));
+    }
+
+
+    //If there's user, we will send them a token with expiration time of 10 minutes.
+
+    let resetToken = user.createResetToken();
+
+    await user.save({ validateBeforeSave: false })
 
     let message = {
         from: '"Fred Foo 👻" <foo@example.com>', // sender address
         to: "bar@example.com, baz@example.com", // list of receivers
         subject: "Hello ✔", // Subject line
-        text: "Hello world?", // plain text body
-        html: "<b>Hello world?</b>", // html body
+        text: `Forgot your password huh? Theres your reset token: ${resetToken}`, // plain text body
     };
 
 

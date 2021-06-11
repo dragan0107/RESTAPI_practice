@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
     email: {
@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema({
     passwordChangedAt: {
         type: Date
     },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     articles: [{
         title: String,
         content: String
@@ -65,6 +67,16 @@ userSchema.methods.passwordChanged = function(jwttimestamp) {
     }
     //if it returns false that means the token has been issued after password changing
     return false;
+}
+
+userSchema.methods.createResetToken = function() {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    this.passwordResetExpires = Date.now() + 600 * 1000;
+
+    return resetToken;
 }
 
 userSchema.methods.passwordChecker = async function(candidatePass, userPassword) {
