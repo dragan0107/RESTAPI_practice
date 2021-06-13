@@ -110,6 +110,19 @@ exports.protect = async(req, res, next) => {
     next();
 }
 
+//role restricting middleware that could later be used to limit certain routes from ordinary accounts
+exports.restrictTo = (...roles) => {
+
+    return async(req, res, next) => {
+
+        if (!roles.includes(req.user.role)) {
+            return next(new AppError(`User doesn't have perms to access this route...`, 403));
+        }
+
+        next();
+    }
+}
+
 
 exports.forgotPassword = async(req, res, next) => {
 

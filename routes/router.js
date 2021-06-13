@@ -1,6 +1,6 @@
 const express = require("express");
 const { getArticlesFromUser, deleteAllArticles, getArticle, putArticle, patchArticle, deleteArticle, addNewArticle } = require("../controllers/articleController");
-const { registerUser, login, protect, updatePassword, forgotPassword, resetPassword } = require('../controllers/authController');
+const { registerUser, login, protect, updatePassword, forgotPassword, resetPassword, restrictTo } = require('../controllers/authController');
 const router = express.Router();
 
 router.post('/register', registerUser);
@@ -10,7 +10,7 @@ router.post('/forgotPassword', forgotPassword);
 router.post('/resetPassword/:token', resetPassword);
 
 router.route("/")
-    .get(protect, getArticlesFromUser)
+    .get(protect, restrictTo('admin', 'pleb'), getArticlesFromUser)
     .patch(addNewArticle)
 
 router.route("/:articleTitle")
