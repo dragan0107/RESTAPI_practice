@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-
+//I decided to use mailtrap io for testing.
 const options = {
     host: "smtp.mailtrap.io",
     port: 2525,

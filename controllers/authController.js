@@ -55,18 +55,23 @@ exports.login = async(req, res, next) => {
 
     const { email, password } = req.body;
 
+    //return an error if either email or pass are not input
     if (!email || !password) {
         return next(new AppError('Please enter both email and password', 400));
     }
 
+    //reincludes password field in order to run the password checker method
     const user = await User.findOne({ email }).select('+password');
 
+    //if the password checker returns false, it sends a fail response
     if (!await user.passwordChecker(password, user.password)) {
         return res.status(200).json({
-            status: 'fail'
+            status: 'fail',
+            message: 'Password or email are wrong'
         });
     }
 
+    //before it sends user it sets its password to undefined (this will not be saved in db)
     user.password = undefined;
 
     createSendToken(user, 200, res);
@@ -85,7 +90,7 @@ exports.protect = async(req, res, next) => {
 
     //If no token, asks user to login again and provide a new token
     if (!token) {
-        return next(new AppError('You are not logged in, please try again', 401))
+        return next(new AppError('You are not logged in, please try again', 401));
     }
 
     //token verification 
@@ -105,6 +110,7 @@ exports.protect = async(req, res, next) => {
         return next(new AppError('Password has been changed recently, please login with new password', 401));
     }
 
+    //attaches the user to the request object so it later manipulates the data from it
     req.user = userFound;
 
     next();
@@ -141,11 +147,11 @@ exports.forgotPassword = async(req, res, next) => {
     }
 
 
-    //If there's user, we will send them a token with expiration time of 10 minutes.
+    //If there's user, we will email them a token with an expiration time of 10 minutes.
 
     let resetToken = user.createResetToken();
 
-    await user.save({ validateBeforeSave: false })
+    await user.save({ validateBeforeSave: false });
 
     let message = {
         from: '"restful_api_service" <restful_api_service@drip.com>', // sender address
